@@ -9,11 +9,7 @@ type tree =
   | Binary of operator * tree * tree
 ;;
 
-input_to_token_list();;
-let f = string_to_token_list("a");;
 
-let t x = x = Add;;
-t (List.hd f);;
 
 let aridity t =
   match t with
@@ -27,7 +23,6 @@ let aridity t =
   | End -> 1
 ;;
 
-let a = Binary(Plus, Cst(2), Cst(2));;
 
 
 let to_tree (token, tree_list : token * tree list) =
@@ -68,32 +63,39 @@ let parse exp =
   
   let change_op_in_expression v =
     match v with
-    | Plus -> Format.printf "+";
-    | Minus -> Format.printf "-";
-    | Mult -> Format.printf "*";
-    | Div -> Format.printf "/";
+    | Plus ->  '+';
+    | Minus ->'-';
+    | Mult -> '*';
+    | Div -> '/';
     ;;
-  
+    (change_op_in_expression Plus);;
     let change_tree_in_expression v =
       match v with
-      | Unary(t)-> Format.printf "";
-      | Cst(t)-> Format.printf "%d" t;
-      | Var(t)-> Format.printf "%c" t;
-      | Binary (t,t1,t2)-> Format.printf "";
+
+      | Cst(t)-> t;
+      | Var(t)->  t;
       ;;
+
+
+
   
-  let z = Cst(5);;
-  Format.printf "%d" z;;
-  change_tree_in_expression z;;
-  let abr_to_list tree =
-    let rec abr_to_list_bis tree lst =
+    let rec abr_to_list_bis( tree, lst) =
      match tree with 
      | Binary(v, l, r) -> match l with 
-                        | Cst c -> 
-                        let p = c in abr_to_list_bis r (change_tree_in_expression p)::lst 
-                        | Var c -> let p = c in abr_to_list_bis r (change_tree_in_expression p)::lst
-                        | Unary c -> abr_to_list_bis r lst
-                        | Binary(s, q, d) -> abr_to_list_bis q lst
+                        | Cst(c) -> abr_to_list_bis( r, char_of_int(c)::lst )
+                        | Var(c) -> abr_to_list_bis( r, c::lst )
+                        | Binary(s, q, d) -> abr_to_list_bis( q, change_op_in_expression s::lst )
                         
-  in abr_to_list_bis tree []
+    | Binary(v, l, r) -> match r with
+                        | Cst(c) -> abr_to_list_bis( l, char_of_int(c)::lst )
+                        | Var(c) -> abr_to_list_bis( l, c::lst )
+                        | Binary(s, q, d) -> abr_to_list_bis( d, change_op_in_expression s::lst )
+  ;;
+  let abr_to_list tree =                   
+  abr_to_list_bis(tree, [])
+  
     ;;
+
+    let tree = Binary(Plus, Cst(5), Cst(5));;
+    #trace abr_to_list;;
+    abr_to_list tree;;
