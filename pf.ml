@@ -61,3 +61,39 @@ let parse exp =
   ;;
 
 
+
+  let a = "4";; 
+
+  Format.printf "test %s" a;;
+  
+  let change_op_in_expression v =
+    match v with
+    | Plus -> Format.printf "+";
+    | Minus -> Format.printf "-";
+    | Mult -> Format.printf "*";
+    | Div -> Format.printf "/";
+    ;;
+  
+    let change_tree_in_expression v =
+      match v with
+      | Unary(t)-> Format.printf "";
+      | Cst(t)-> Format.printf "%d" t;
+      | Var(t)-> Format.printf "%c" t;
+      | Binary (t,t1,t2)-> Format.printf "";
+      ;;
+  
+  let z = Cst(5);;
+  Format.printf "%d" z;;
+  change_tree_in_expression z;;
+  let abr_to_list tree =
+    let rec abr_to_list_bis tree lst =
+     match tree with 
+     | Binary(v, l, r) -> match l with 
+                        | Cst c -> 
+                        let p = c in abr_to_list_bis r (change_tree_in_expression p)::lst 
+                        | Var c -> let p = c in abr_to_list_bis r (change_tree_in_expression p)::lst
+                        | Unary c -> abr_to_list_bis r lst
+                        | Binary(s, q, d) -> abr_to_list_bis q lst
+                        
+  in abr_to_list_bis tree []
+    ;;
