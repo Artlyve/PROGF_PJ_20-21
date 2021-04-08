@@ -30,12 +30,34 @@ let aridity t =
 let a = Binary(Plus, Cst(2), Cst(2));;
 
 
+let to_tree (token, tree_list : token * tree list) =
+  let hd::tl = tree_list in 
+  let hd2::tl2 = tl in 
+  match token with
+  | Add       -> Binary(Plus, hd, hd2)::tl2
+  | Subtract  -> Binary(Minus, hd, hd2)::tl2
+  | Multiply  -> Binary(Mult, hd, hd2)::tl2
+  | Divide    -> Binary(Div, hd, hd2)::tl2
+  | Minus     -> Unary(hd)::tl
+  | _ -> failwith("to_tree : token non valide")
+  
+;;
+
+let rec parse_bis (exp,t_list) =
+  if exp = []
+  then failwith("parse_bis : fin d'expression attendue")
+  else
+    let hd::tl = exp in
+    match hd with
+    | Variable(x) -> parse_bis( tl, Var(x)::t_list)
+    | Number(x)   -> parse_bis( tl, Cst(x)::t_list)
+    | End         -> List.hd t_list
+    | _           -> parse_bis( tl, to_tree(hd, t_list))
+  ;;
+
+
 let parse exp =
-  let rec parse_aux exp_aux arb = 
-  match exp_aux with
-  |[] -> failwith"Expression Vide !"
-  |h::t -> if aridity h = 2
-            then match abr with
-            | Unary -> Binary(h, Unary, Unary)
-            | Binary(v, l, r) -> Binary(h, Binary(v, l, r), Unary )
-  ;; 
+  parse_bis(exp,[])
+  ;;
+
+
