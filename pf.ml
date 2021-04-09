@@ -171,7 +171,7 @@ let rec abr_to_list_bis( tree, lst) =
                       |Binary(s, q, d) -> ( match r with
                                           |Cst(a) -> abr_to_list_bis( l, "("::change_op_in_expression v::string_of_int(a)::lst)
                                           |Var(a) -> abr_to_list_bis( l, "("::change_op_in_expression v::string_of_char a::lst)
-                                          |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::lst@["("]@abr_to_list_bis(l, lst)) )
+                                          |Binary(s, q, d) -> ["("]@abr_to_list_bis( r, change_op_in_expression v::lst@["("]@abr_to_list_bis(l, lst)) )
                       else if v = Div
                       then match l with
                       |Cst(c) -> ( match r with
@@ -185,20 +185,20 @@ let rec abr_to_list_bis( tree, lst) =
                       |Binary(s, q, d) -> ( match r with
                                         |Cst(a) -> abr_to_list_bis( l,")"::change_op_in_expression v::string_of_int(a)::lst)
                                         |Var(a) -> abr_to_list_bis( l, ")"::change_op_in_expression v::string_of_char a::lst)
-                                        |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::lst@["("]@abr_to_list_bis(l, lst)) )
+                                        |Binary(s, q, d) -> ["("]@abr_to_list_bis( r, change_op_in_expression v::lst@["("]@abr_to_list_bis(l, lst)) )
                       else match l with
                       |Cst(c) ->( match r with
-                                |Cst(a) -> string_of_int(a)::change_op_in_expression v::string_of_int(c)::lst
-                                |Var(a) -> string_of_char a::change_op_in_expression v::string_of_int(c)::lst
-                                |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::lst) )
+                                |Cst(a) -> "("::string_of_int(a)::change_op_in_expression v::string_of_int(c)::")"::lst
+                                |Var(a) -> "("::string_of_char a::change_op_in_expression v::string_of_int(c)::")"::lst
+                                |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::")"::lst) )
                       |Var(c) -> ( match r with
-                                |Cst(a) -> string_of_int(a)::change_op_in_expression v::string_of_char c::lst
-                                |Var(a) -> string_of_char a::change_op_in_expression v::string_of_char c::lst
-                                |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::lst) )
+                                |Cst(a) -> "("::string_of_int(a)::change_op_in_expression v::string_of_char c::")"::lst
+                                |Var(a) -> "("::string_of_char a::change_op_in_expression v::string_of_char c::")"::lst
+                                |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::")"::lst) )
                       |Binary(s, q, d) -> ( match r with
-                                          |Cst(a) -> abr_to_list_bis( l, change_op_in_expression v::string_of_int(a)::lst)
-                                          |Var(a) -> abr_to_list_bis( l, change_op_in_expression v::string_of_char a::lst)
-                                          |Binary(s, q, d) -> abr_to_list_bis( r, change_op_in_expression v::lst@abr_to_list_bis(l, lst)) )
+                                          |Cst(a) -> "("::abr_to_list_bis( l, change_op_in_expression v::string_of_int(a)::")"::lst)
+                                          |Var(a) -> "("::abr_to_list_bis( l, change_op_in_expression v::string_of_char a::")"::lst)
+                                          |Binary(s, q, d) -> ["("]@abr_to_list_bis( r, change_op_in_expression v::lst@abr_to_list_bis(l, lst)) )
 in abr_to_list_bis(tree, [])
 ;; 
                                           
