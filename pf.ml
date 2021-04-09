@@ -57,6 +57,85 @@ let parse exp =
 
 
 
+  let simplify_bis t_tree =
+    match t_tree with
+    | Cst(x)  -> t_tree
+    | Var(x)  -> t_tree
+    | Unary(x)-> t_tree
+    | Binary(op,lson,rson) -> match op with
+                              |Plus   -> ( match lson with
+                                          |Cst(x) -> (if(x = 0)
+                                                      then rson
+                                                      else
+                                                      match rson with
+                                                      |Cst(y) ->  if(y = 0)
+                                                                  then lson
+                                                                  else t_tree 
+                                                      |_ -> t_tree )
+                                          |Var(x) -> (match rson with
+                                                      |Cst(y) ->  if(y = 0)
+                                                                  then lson
+                                                                  else t_tree 
+                                                      |_ -> t_tree )
+                                          |_ -> t_tree)
+                              |Minus  -> ( match lson with
+                                          |Cst(x) -> (match rson with
+                                                      |Cst(y) ->  if (x=y)
+                                                                  then Cst(0)
+                                                                  else t_tree
+                                                      |Var(y) ->  t_tree
+                                                      |_ -> t_tree )
+                                          |Var(x) -> (match rson with
+                                                      |Cst(y) ->  t_tree
+                                                      |Var(y) ->  if (x=y)
+                                                                  then Cst(0)
+                                                                  else t_tree
+                                                      |_ -> t_tree )
+                                          |_ -> t_tree )
+                              |Div    -> ( match lson with
+                                          |Cst(x) -> (match rson with
+                                                      |Cst(y) ->  if (x=y)
+                                                                  then Cst(1)
+                                                                  else t_tree
+                                                      |Var(y) ->  t_tree
+                                                      |_ -> t_tree )
+                                          |Var(x) -> (match rson with
+                                                      |Cst(y) ->  t_tree
+                                                      |Var(y) ->  if (x=y)
+                                                                  then Cst(1)
+                                                                  else t_tree
+                                                      |_ -> t_tree )
+                                          |_ -> t_tree )
+                              |Mult   -> ( match lson with
+                                          |Cst(x) ->  if(x = 0)
+                                                      then Cst(0)
+                                                      else
+                                                        if(x = 1)
+                                                        then rson
+                                                        else t_tree
+                                          |Var(x) -> (match rson with
+                                                      |Cst(y) ->  if(y = 0)
+                                                                  then Cst(0)
+                                                                  else
+                                                                    if(y = 1)
+                                                                    then lson
+                                                                    else t_tree
+                                                      |Var(y) -> t_tree
+                                                      |_ -> t_tree )
+                                          |_ -> t_tree)                          
+                              |_ -> failwith("simplify_bis : operateur non reconnu") 
+;;
+
+  
+
+let rec simplify tree =
+  match tree with
+  |Binary(op, lson, rson) -> simplify_bis(Binary(op,simplify(lson),simplify(rson)))
+  |_                      -> tree
+  ;;
+
+
+
   let a = "4";; 
 
   Format.printf "test %s" a;;
