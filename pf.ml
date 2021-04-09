@@ -151,6 +151,19 @@ let change_op_in_expression v =
 (* converti un charactère en string*)
 let string_of_char = String.make 1 ;;
 
+let rec abr_to_string tree =
+  match tree with
+  | Binary(op, lson, rson) -> "(" ^ abr_to_string(lson) ^ change_op_in_expression(op) ^ abr_to_string(rson) ^ ")"
+  | Unary(x)               -> "(-" ^ abr_to_string(x) ^ ")"
+  | Cst(x)                 -> string_of_int(x)
+  | Var(x)                 -> string_of_char(x)
+;;
+
+
+  
+  
+
+
 (*Converti un arbre en une list de string
 @Param tree => tree
 @Param lst => string list
@@ -215,11 +228,11 @@ match lst with
 
                
 
-let tree = Binary(Plus, Binary(Div, Cst(5), Var('x')), Binary(Mult, Cst(9), Binary(Minus, Cst(19), Cst(36))));;
+let tree = Binary(Plus, Binary(Div, Var('x'), Var('x')), Binary(Mult, Cst(9), Binary(Minus, Cst(19), Cst(36))));;
 let tree2 = simplify tree;;
 
-let lst = abr_to_list tree;;
+let lst = abr_to_string tree;;
 
-let lst2 = abr_to_list tree2;;
+let lst2 = abr_to_string tree2;;
 display lst;;
 display lst2;;
