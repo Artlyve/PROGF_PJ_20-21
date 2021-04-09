@@ -1,7 +1,8 @@
 #load "expression_scanner.cmo";;
 open Expression_scanner;;
 
-type operator = |Plus | Minus | Mult | Div
+(*Type operator et tree*)
+type operator = |Plus | Minus | Mult | Div | Null
 type tree = 
   | Var of char
   | Cst of int
@@ -10,7 +11,9 @@ type tree =
 ;;
 
 
-
+(*Indique l'aridité d'un token
+  @Param t => token
+*)
 let aridity t =
   match t with
   | Add -> 2
@@ -26,15 +29,18 @@ let aridity t =
 
 
 
-(**)
+(*Gestion des operateurs
+  @Param token => token
+  @Param tree_list => tree list
+*)
 let to_tree (token, tree_list : token * tree list) =
   let hd::tl = tree_list in 
   let hd2::tl2 = tl in 
   match token with
-  | Add       -> Binary(Plus, hd, hd2)::tl2
-  | Subtract  -> Binary(Minus, hd, hd2)::tl2
-  | Multiply  -> Binary(Mult, hd, hd2)::tl2
-  | Divide    -> Binary(Div, hd, hd2)::tl2
+  | Add       -> Binary(Plus, hd2, hd)::tl2
+  | Subtract  -> Binary(Minus, hd2, hd)::tl2
+  | Multiply  -> Binary(Mult, hd2, hd)::tl2
+  | Divide    -> Binary(Div, hd2, hd)::tl2
   | Minus     -> Unary(hd)::tl
   | _ -> failwith("to_tree : token non valide")
   
@@ -56,7 +62,6 @@ let rec parse_bis (exp,t_list) =
     | End         -> List.hd t_list
     | _           -> parse_bis( tl, to_tree(hd, t_list))
   ;;
-
 
 (*Convertie l'expression tokene en arbre
   @Patam exp => token
@@ -81,9 +86,7 @@ let parse exp =
                                                       then rson
                                                       else
                                                       match rson with
-                                                      |Cst(y) ->  if(y = 0)
-                                                                  then lson
-                                                                  else t_tree 
+                                                      |Cst(y) ->  Cst(x+y)
                                                       |_ -> t_tree )
                                           |Var(x) -> (match rson with
                                                       |Cst(y) ->  if(y = 0)
@@ -93,9 +96,7 @@ let parse exp =
                                           |_ -> t_tree)
                               |Minus  -> ( match lson with
                                           |Cst(x) -> (match rson with
-                                                      |Cst(y) ->  if (x=y)
-                                                                  then Cst(0)
-                                                                  else t_tree
+                                                      |Cst(y) ->  Cst(x-y)
                                                       |Var(y) ->  t_tree
                                                       |_ -> t_tree )
                                           |Var(x) -> (match rson with
@@ -107,9 +108,7 @@ let parse exp =
                                           |_ -> t_tree )
                               |Div    -> ( match lson with
                                           |Cst(x) -> (match rson with
-                                                      |Cst(y) ->  if (x=y)
-                                                                  then Cst(1)
-                                                                  else t_tree
+                                                      |Cst(y) ->  Cst(x/y)
                                                       |Var(y) ->  t_tree
                                                       |_ -> t_tree )
                                           |Var(x) -> (match rson with
@@ -120,12 +119,10 @@ let parse exp =
                                                       |_ -> t_tree )
                                           |_ -> t_tree )
                               |Mult   -> ( match lson with
-                                          |Cst(x) ->  if(x = 0)
-                                                      then Cst(0)
-                                                      else
-                                                        if(x = 1)
-                                                        then rson
-                                                        else t_tree
+                                          |Cst(x) ->  (match rson with
+                                                       |Cst(y) ->  Cst(x*y)
+                                                       |Var(y) ->  t_tree
+                                                       |_ -> t_tree )
                                           |Var(x) -> (match rson with
                                                       |Cst(y) ->  if(y = 0)
                                                                   then Cst(0)
@@ -143,7 +140,6 @@ let parse exp =
 (*Simplifie un arbre
   @Param tree => tree
 *)
-
 let rec simplify tree =
   match tree with
   |Binary(op, lson, rson) -> simplify_bis(Binary(op,simplify(lson),simplify(rson)))
@@ -167,34 +163,61 @@ let change_op_in_expression v =
 (* converti un charactère en string*)
 let string_of_char = String.make 1 ;;
 
-(* converti un arbre en string
-  @Param tree => tree
-*)
-let rec abr_to_string tree =
+
+let rec abr_to_string_aux(tree,op_prec)=
   match tree with
-  | Binary(op, lson, rson) -> "(" ^ abr_to_string(lson) ^ change_op_in_expression(op) ^ abr_to_string(rson) ^ ")"
-  | Unary(x)               -> "(-" ^ abr_to_string(x) ^ ")"
+  | Binary(op, lson, rson) -> if(op_prec = op)
+                              then abr_to_string_aux(lson,op) ^ change_op_in_expression(op) ^ abr_to_string_aux(rson,op)
+                              else "(" ^ abr_to_string_aux(lson,op) ^ change_op_in_expression(op) ^ abr_to_string_aux(rson,op) ^ ")"
+  | Unary(x)               -> "(-" ^ abr_to_string_aux(x,Null) ^ ")"
   | Cst(x)                 -> string_of_int(x)
   | Var(x)                 -> string_of_char(x)
-;;       
-
-(*Fonction d'affichage sur la sortie
-@Param lst => string list
-*)
-let rec display lst = 
-match lst with
-| [] -> print_newline()
-|h::t -> (print_string(h); display t)
 ;;
 
 
-               
 
-let tree = Binary(Plus, Binary(Div, Var('x'), Var('x')), Binary(Mult, Cst(9), Binary(Minus, Cst(19), Cst(36))));;
-let tree2 = simplify tree;;
+(* converti un arbre en string
+  @Param tree => tree
+*) 
+let abr_to_string tree =
+  match tree with
+  | Binary(op, lson, rson) -> abr_to_string_aux(lson,op) ^ change_op_in_expression(op) ^ abr_to_string_aux(rson,op)
+  | Unary(x)               -> abr_to_string_aux(x,Null)
+  | Cst(x)                 -> string_of_int(x)
+  | Var(x)                 -> string_of_char(x)
+;;
+    
 
-let lst = abr_to_string tree;;
+(*Fonction pour les tests
+  Converti token list en string
+  @Param t_list => token list
+*)
+let tokenList_to_expression t_list =
+  let tree = parse t_list in
+  let simp_tree = simplify tree in
+  let expr = abr_to_string simp_tree in
+  expr
+  ;;
 
-let lst2 = abr_to_string tree2;;
-display lst;;
-display lst2;;
+
+(*Test*)
+tokenList_to_expression [Variable('x'); Number(3); Add; Number(5); Number(7); Add; Add; Number(3); Number(4); Multiply; Number(1); Number(3); Add; Divide;Divide; End];;
+
+
+(*
+(*Tentative d'un main (cf. compilation) *)
+let main =
+  print_endline("Entrer une expression : ");
+  let stg_exp = input_to_token_list() in
+
+  let tree = parse(stg_exp) in
+  let tree_simplify = simplify tree in
+  let stg_tree = abr_to_string tree in
+  let stg_tree_simplify = abr_to_string tree_simplify in
+
+  print_endline("Affiche expression non simplifiée : ");
+  print_endline(stg_tree);
+  print_endline("Affiche expression simplifiée : ");
+  print_endline(stg_tree_simplify)
+;;
+*)
