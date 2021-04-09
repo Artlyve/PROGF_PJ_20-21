@@ -216,7 +216,10 @@ match lst with
                
 
 let tree = Binary(Plus, Binary(Div, Cst(5), Var('x')), Binary(Mult, Cst(9), Binary(Minus, Cst(19), Cst(36))));;
-
+let tree2 = simplify tree;;
 
 let lst = abr_to_list tree;;
+
+let lst2 = abr_to_list tree2;;
 display lst;;
+display lst2;;
